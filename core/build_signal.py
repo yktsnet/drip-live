@@ -20,7 +20,7 @@ from strategies.trend.strategy import DEFAULT_INDICATORS, decide, get_config
 
 
 def _load_app_env() -> dict:
-    path = paths.get_env_dir() / ".env.live_dynamic"
+    path = paths.get_env_dir() / ".env.drip_live"
     env = {}
     if path.exists():
         for line in path.read_text(encoding="utf-8").splitlines():

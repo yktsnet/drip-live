@@ -41,7 +41,7 @@ def test_malformed_records_are_ignored():
 
 
 def test_read_halt_flags_skips_broken_lines(tmp_path, monkeypatch):
-    monkeypatch.setenv("LIVE_DYNAMIC_DATA", str(tmp_path))
+    monkeypatch.setenv("DRIP_LIVE_DATA", str(tmp_path))
     state = tmp_path / "state"
     state.mkdir(parents=True)
     (state / "halt_flags.jsonl").write_text(
@@ -53,5 +53,5 @@ def test_read_halt_flags_skips_broken_lines(tmp_path, monkeypatch):
 
 
 def test_read_halt_flags_missing_file(tmp_path, monkeypatch):
-    monkeypatch.setenv("LIVE_DYNAMIC_DATA", str(tmp_path))
+    monkeypatch.setenv("DRIP_LIVE_DATA", str(tmp_path))
     assert halt_io.read_halt_flags() == []

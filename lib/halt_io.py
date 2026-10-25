@@ -2,7 +2,7 @@
 
 Any external system (an anomaly detector, an economic-calendar watcher, or a
 human with an editor) can halt trading by appending a JSONL record to
-``LIVE_DYNAMIC_DATA/state/halt_flags.jsonl``:
+``DRIP_LIVE_DATA/state/halt_flags.jsonl``:
 
 - ``{"ts": "2026-01-05T09:00:00Z"}`` halts that whole UTC day
 - ``{"start": "...", "end": "..."}`` halts the window (open-ended if ``end`` is missing)

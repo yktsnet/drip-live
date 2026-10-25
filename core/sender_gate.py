@@ -15,7 +15,7 @@ from lib import broker_client, env_auth, oco_manager, paths, token_io
 
 
 def _load_app_env() -> dict:
-    path = paths.get_env_dir() / ".env.live_dynamic"
+    path = paths.get_env_dir() / ".env.drip_live"
     env = {}
     if path.exists():
         for line in path.read_text(encoding="utf-8").splitlines():

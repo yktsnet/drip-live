@@ -1,4 +1,4 @@
-# live-dynamic
+# drip-live
 
 @context/conventions.md
 @context/structure.md
@@ -6,7 +6,7 @@
 ## Identity (One-sentence Definition)
 
 汎用部分 = bt-dynamic で検証した戦略をブローカー OpenAPI + systemd timer で無人運転する実弾実行層（参照実装・clone リファレンス）。
-固有部分 = 戦略の実値（config JSON）・接続情報（env ファイル）。すべて `LIVE_DYNAMIC_DATA` 側の外部注入でリポ外。
+固有部分 = 戦略の実値（config JSON）・接続情報（env ファイル）。すべて `DRIP_LIVE_DATA` 側の外部注入でリポ外。
 
 フェーズ: **MVP期**。
 
@@ -28,7 +28,7 @@ nix-shell --run "PYTHONPATH=. pytest tests -q"
 
 # dry_run デモ（資格情報不要）
 nix-shell --run "
-  export LIVE_DYNAMIC_DATA=~/live_dynamic_data MARKET_DATA=~/market_data \
+  export DRIP_LIVE_DATA=~/drip_live_data MARKET_DATA=~/market_data \
          BT_DYNAMIC_CONFIG=examples/config.json PYTHONPATH=.
   python examples/generate_bars.py && python core/orchestrator.py"
 ```
@@ -39,7 +39,7 @@ Nix を使わない環境（CI 等）は `pip install -r requirements.txt pytest
 
 - 判定（`build_signal`、ブローカー非接続）と発注（`sender_gate`、冪等）を分離。間は `signal.jsonl` の受け渡しのみ。
 - フェイルセーフは三層: OCO 自動配置（`oco_manager`）・EOD 強制決済（`eod_close`）・キルスイッチ（`halt_check` + `state/halt_flags.jsonl`）。
-- systemd timer（`live-dynamic-service.nix`）が各スクリプトを oneshot で叩く。常駐プロセスなし。
+- systemd timer（`drip-live-service.nix`）が各スクリプトを oneshot で叩く。常駐プロセスなし。
 
 ## 検証手段
 

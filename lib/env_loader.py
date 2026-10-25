@@ -1,6 +1,6 @@
-"""Parameter loading from ``LIVE_DYNAMIC_DATA/env/`` files.
+"""Parameter loading from ``DRIP_LIVE_DATA/env/`` files.
 
-Load order: ``.env.trade.base`` then ``.env.live_dynamic``; process env
+Load order: ``.env.trade.base`` then ``.env.drip_live``; process env
 vars override file values.
 """
 from __future__ import annotations
@@ -30,7 +30,7 @@ def load_params() -> dict:
 
     params: dict = {}
     _load_file(env_dir / ".env.trade.base", params)
-    _load_file(env_dir / ".env.live_dynamic", params)
+    _load_file(env_dir / ".env.drip_live", params)
 
     for k in list(params.keys()):
         env_val = os.environ.get(k)

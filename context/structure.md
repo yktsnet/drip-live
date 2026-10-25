@@ -1,7 +1,7 @@
 # Structure
 
 ```
-live-dynamic/
+drip-live/
 ├── core/                       # systemd timer から oneshot 起動される実行スクリプト
 │   ├── orchestrator.py           # build_signal → sender_gate をシーケンス実行（30分ごと）
 │   ├── build_signal.py           # バー読込 → 戦略判定 → signal.jsonl 追記。ブローカー非接続
@@ -11,7 +11,7 @@ live-dynamic/
 │   ├── token_refresh.py          # アクセストークンのリフレッシュ（5分ごと）
 │   └── fetch_bars.py             # 5分足の取得・保存（5分ごと）
 ├── lib/                        # 自己完結ライブラリ
-│   ├── paths.py                  # パス解決の唯一の入口（LIVE_DYNAMIC_DATA / MARKET_DATA）
+│   ├── paths.py                  # パス解決の唯一の入口（DRIP_LIVE_DATA / MARKET_DATA）
 │   ├── env_auth.py / env_loader.py  # env ファイルの読み込み（環境変数優先）
 │   ├── broker_client.py          # 発注・ポジション API クライアント（urllib のみ）
 │   ├── chart_client.py           # チャート API クライアント（fetch_bars 用）
@@ -23,7 +23,7 @@ live-dynamic/
 ├── strategies/trend/strategy.py  # bt-dynamic パッケージへの接続層。判定は classify/resolve_entry に委譲
 ├── examples/                   # ダミー config と合成バー生成（デモ・検証用）
 ├── tests/                      # pytest（一時ディレクトリ + 合成データのみ）
-└── live-dynamic-service.nix    # systemd サービス / timer 定義（ユーザ・パスはオプション注入）
+└── drip-live-service.nix    # systemd サービス / timer 定義（ユーザ・パスはオプション注入）
 ```
 
 ## データフロー
@@ -39,4 +39,4 @@ halt_check / eod_close ──▶ force_close（全決済）──▶ halt_log.js
 token_refresh ──▶ MARKET_DATA/state/tokens/live_current.json（fetch と発注で共有）
 ```
 
-`LIVE_DYNAMIC_DATA` = このアプリの state/logs/env、`MARKET_DATA` = バーとトークンの共有ルート。リポ内に状態・秘密は持たない。
+`DRIP_LIVE_DATA` = このアプリの state/logs/env、`MARKET_DATA` = バーとトークンの共有ルート。リポ内に状態・秘密は持たない。
