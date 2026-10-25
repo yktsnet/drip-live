@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/yktsnet/drip-live/actions/workflows/ci.yml/badge.svg)](https://github.com/yktsnet/drip-live/actions/workflows/ci.yml)
 
-[bt-dynamic](https://github.com/yktsnet/bt-dynamic)（動的レジーム切替バックテスト）で検証した戦略を、**同一の判定コード・同一の config のまま**実弾に接続する実行層。判定はブローカーに触れず、実行層が足すのはロット計算と安全装置——冪等な発注ゲート・照合型 OCO・EOD 決済・キルスイッチ——だけである。検証した式と運用する式を一致させたまま、systemd timer で無人運転する。
+バックテストで検証した戦略を、**同一の判定コード・同一の config のまま**実弾に接続する実行層。判定はブローカーに触れず、実行層が足すのはロット計算と安全装置（冪等な発注ゲート・照合型 OCO・EOD 決済・キルスイッチ）だけである。検証した式と運用する式を一致させたまま、systemd timer で無人運転する。
 
 > **免責**: 本リポジトリは自動売買の運用設計を示す参照実装であり、投資助言ではない。実弾での利用は自己責任で行うこと。既定は dry_run（発注しない）であり、実発注には明示的な切替が必要。
 
@@ -40,7 +40,7 @@ cat $DRIP_LIVE_DATA/state/sent.jsonl     # dry_run=true の送信記録
 ```mermaid
 flowchart TD
     subgraph offline["資格情報なしで動く"]
-        BARS[("bars/*.jsonl")] --> BS["build_signal<br/>decide() = bt_dynamic"]
+        BARS[("bars/*.jsonl")] --> BS["build_signal<br/>decide()"]
     end
 
     BS --> SIG[/"signal.jsonl<br/>追記専用・唯一の接点"/]
@@ -86,8 +86,8 @@ flowchart TD
 
 | Layer | Technology | Reason |
 |---|---|---|
-| 戦略判定 | [bt-dynamic](https://pypi.org/project/bt-dynamic/) (PyPI) | バックテストと同一コード・同一 config で本番判定する。研究と本番の乖離を仕組みで塞ぐ |
-| データ処理 | Python + pandas | bt-dynamic の指標計算と同じ基盤。実行層に独自の数値処理を持ち込まない |
+| 戦略判定 | バックテストエンジンのパッケージ（参照実装は PyPI の [bt-dynamic](https://pypi.org/project/bt-dynamic/)） | バックテストと同一コード・同一 config で本番判定する。研究と本番の乖離を仕組みで塞ぐ |
+| データ処理 | Python + pandas | バックテストエンジンの指標計算と同じ基盤。実行層に独自の数値処理を持ち込まない |
 | ブローカー API | 標準ライブラリのみ（urllib） | 発注経路の依存を最小化する。requests 等の外部依存は障害点と供給網リスクになる |
 | スケジューリング | systemd timer（oneshot） | 常駐プロセスを持たない。プロセスが死んでいる状態がない・状態はすべてファイルにある |
 | サービス定義 | Nix (`drip-live-service.nix`) | timer・環境変数・依存 Python 環境を宣言的に固定し、ホストへ再現可能に配備する |
@@ -97,7 +97,7 @@ flowchart TD
 
 要点のみ。全文は [docs/design-decisions.md](docs/design-decisions.md)。
 
-- **バックテストと本番を同一の判定にする**: 判定は bt-dynamic の同じ関数を同じ config で呼ぶ。エンジンの1本ずらし（指標はバー確定時点・エントリーは次バー open）は先読みバイアス潰しであると同時に、5分足が瞬時に確定しない本番の現実に合わせた形であり、これによって検証と運用の約定条件が一致する
+- **バックテストと本番を同一の判定にする**: 判定はバックテストエンジンの同じ関数を同じ config で呼ぶ。エンジンの1本ずらし（指標はバー確定時点・エントリーは次バー open）は先読みバイアスを防ぐ形であると同時に、5分足が瞬時に確定しない本番の現実に合わせた形であり、これによって検証と運用の約定条件が一致する
 - **建玉はブローカーに問う**: ローカルで建玉を計算・保持するのは一見簡単に見えてロジックが難しすぎる、というのが本番で得た結論。毎回エントリーしてネットアウトはブローカーに任せ、OCO の量も API の建玉から計算する
 - **OCO は約定後に照合して揃える**: 配置済みを信じず、実行のたびに建玉と突き合わせて古い注文を掃除し不足だけを置く。途中失敗やレート制限があっても次の実行で自己修復する
 - **常駐プロセスを持たない**: 全スクリプトが oneshot で走り切る。「死んでいるのに気づかない」状態を持たず、同時実行はロックでなく冪等キーの照合で防ぐ
@@ -148,7 +148,7 @@ ENABLE_EXEC_REQUESTS=0   # dry_run（既定）。1 で実発注
 LOT_BASE=0.1
 ```
 
-戦略パラメータ（セル対応表・閾値・TP/SL・判定間隔・セッション時刻）は `$BT_DYNAMIC_CONFIG` の config JSON。形式は bt-dynamic と同一で、[examples/config.json](examples/config.json) が教科書的ダミー値の見本。
+戦略パラメータ（閾値・TP/SL・判定間隔・セッション時刻）は `$BT_DYNAMIC_CONFIG` の config JSON。形式はバックテストエンジンと同一で、[examples/config.json](examples/config.json) が教科書的ダミー値の見本。
 
 ### Kill Switch
 

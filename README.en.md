@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/yktsnet/drip-live/actions/workflows/ci.yml/badge.svg)](https://github.com/yktsnet/drip-live/actions/workflows/ci.yml)
 
-A live execution layer that connects a strategy validated with [bt-dynamic](https://github.com/yktsnet/bt-dynamic) (dynamic-regime backtesting) to a broker's OpenAPI **with the same decision code and the same config**. Decisions never touch the broker; all the execution layer adds is lot sizing and safety devices — an idempotent order gate, reconciling OCO, EOD close, and a kill switch. The formula you validated and the formula you run stay identical, unattended on systemd timers.
+A live execution layer that connects a backtest-validated strategy to a broker's OpenAPI **with the same decision code and the same config**. Decisions never touch the broker; all the execution layer adds is lot sizing and safety devices — an idempotent order gate, reconciling OCO, EOD close, and a kill switch. The formula you validated and the formula you run stay identical, unattended on systemd timers.
 
 > **Disclaimer**: This repository is a reference implementation of trading-operations design, not investment advice. Use with real money at your own risk. The default mode is dry_run (no orders are sent); live trading requires an explicit switch.
 
@@ -40,7 +40,7 @@ Below is the main path up to order submission. The halt and force-close paths ar
 ```mermaid
 flowchart TD
     subgraph offline["runs without credentials"]
-        BARS[("bars/*.jsonl")] --> BS["build_signal<br/>decide() = bt_dynamic"]
+        BARS[("bars/*.jsonl")] --> BS["build_signal<br/>decide()"]
     end
 
     BS --> SIG[/"signal.jsonl<br/>append-only, the only contact point"/]
@@ -86,8 +86,8 @@ flowchart TD
 
 | Layer | Technology | Reason |
 |---|---|---|
-| Strategy decisions | [bt-dynamic](https://pypi.org/project/bt-dynamic/) (PyPI) | Production decisions run the same code and same config as the backtest, closing the research/production gap structurally |
-| Data processing | Python + pandas | Same foundation as bt-dynamic's indicators; the execution layer adds no numerical code of its own |
+| Strategy decisions | The backtest engine's package (the reference implementation uses [bt-dynamic](https://pypi.org/project/bt-dynamic/) from PyPI) | Production decisions run the same code and same config as the backtest, closing the research/production gap structurally |
+| Data processing | Python + pandas | Same foundation as the backtest engine's indicators; the execution layer adds no numerical code of its own |
 | Broker API | Standard library only (urllib) | Minimal dependencies on the order path; third-party HTTP libraries are a failure point and a supply-chain risk |
 | Scheduling | systemd timers (oneshot) | No resident process: there is no "the process is dead" state, and all state lives in files |
 | Service definition | Nix (`drip-live-service.nix`) | Timers, environment, and the Python environment are pinned declaratively and reproducibly |
@@ -97,7 +97,7 @@ flowchart TD
 
 Highlights only; the full log is in [docs/design-decisions.en.md](docs/design-decisions.en.md).
 
-- **Backtest and production share one decision**: decisions call the same bt-dynamic functions with the same config. The engine's one-bar shift (indicators at bar close, entry at the next bar's open) kills lookahead bias and simultaneously matches the live reality that a 5-minute bar is not instantly final — so validated and executed fill conditions coincide
+- **Backtest and production share one decision**: decisions call the backtest engine's own functions with the same config. The engine's one-bar shift (indicators at bar close, entry at the next bar's open) kills lookahead bias and simultaneously matches the live reality that a 5-minute bar is not instantly final — so validated and executed fill conditions coincide
 - **Ask the broker for the position**: computing and holding position state locally looks easy and turns out to be too hard to get right — that was the production lesson. Enter on every signal, let the broker net out, and size the OCO from the position the API reports
 - **OCO reconciles after the fill**: never trust that brackets are placed; every run compares them against the current position, cancels stale orders, and places only what is missing. Partial failures and rate limits self-heal on the next run
 - **No resident processes**: every script runs oneshot to completion. There is no "dead but unnoticed" state, and concurrency is handled by idempotency keys, not locks
@@ -148,7 +148,7 @@ ENABLE_EXEC_REQUESTS=0   # dry_run (default). Set to 1 for live orders
 LOT_BASE=0.1
 ```
 
-Strategy parameters (cell mapping, thresholds, TP/SL, decision interval, session hours) live in the config JSON pointed to by `$BT_DYNAMIC_CONFIG` — the same format as bt-dynamic. [examples/config.json](examples/config.json) shows textbook placeholder values.
+Strategy parameters (thresholds, TP/SL, decision interval, session hours) live in the config JSON pointed to by `$BT_DYNAMIC_CONFIG`, in the same format the backtest engine reads. [examples/config.json](examples/config.json) shows textbook placeholder values.
 
 ### Kill Switch
 

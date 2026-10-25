@@ -10,7 +10,7 @@ The full design log of the execution layer. Highlights are in the [README](../RE
 
 ## One decision, shared by backtest and production
 
-Strategy decisions call the same functions from the bt-dynamic package with the same config JSON. The execution layer holds no copy or variation of the decision logic.
+Strategy decisions call the same functions from the backtest engine's package with the same config JSON. The execution layer holds no copy or variation of the decision logic.
 
 The identity extends beyond code to fill conditions. The backtest is built on a one-bar shift — indicators at bar N's close, entry at bar N+1's open. That kills lookahead bias, and it also matches the live reality that a 5-minute bar is not final the instant it ends: because of the shift, production decides on a completed bar and fills at the head of the next one, exactly as the backtest assumes. The forced end-of-session close (EOD) cuts the same way the engine does. If the formula you validated differs from the formula you run, the validation meant nothing.
 
