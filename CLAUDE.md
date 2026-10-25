@@ -5,7 +5,7 @@
 
 ## Identity (One-sentence Definition)
 
-汎用部分 = bt-dynamic で検証した戦略をブローカー OpenAPI + systemd timer で無人運転する実弾実行層（参照実装・clone リファレンス）。
+汎用部分 = バックテストで検証した戦略をブローカー OpenAPI + systemd timer で無人運転する実弾実行層（参照実装・clone リファレンス）。
 固有部分 = 戦略の実値（config JSON）・接続情報（env ファイル）。すべて `DRIP_LIVE_DATA` 側の外部注入でリポ外。
 
 フェーズ: **MVP期**。
@@ -13,7 +13,7 @@
 ## Invariants
 
 - コード・ドキュメント・コミットに実ブローカー名・接続先 URL を書かない。接続先は `BROKER_API_BASE` / `BROKER_AUTH_BASE` の env 必須（コード内デフォルト禁止）。
-- 戦略定数（セル対応表・TP/SL・閾値・銘柄 ID・ロット）はリポに置かない。`$BT_DYNAMIC_CONFIG` と env の注入のみ。`examples/` は教科書的ダミー値だけ。
+- 戦略定数（TP/SL・閾値・銘柄 ID・ロット）はリポに置かない。`$BT_DYNAMIC_CONFIG` と env の注入のみ。`examples/` は教科書的ダミー値だけ。
 - 状態ファイルの書き込みはすべて atomic（`.tmp` → `os.replace`）。`signal.jsonl` / `sent.jsonl` / `halt_log.jsonl` は追記のみ。
 - ブローカー API 呼び出しは `lib/broker_client.py`（発注系）と `lib/chart_client.py`（チャート系）経由のみ。両者は標準ライブラリ（urllib）だけで書く。
 - `ENABLE_EXEC_REQUESTS` の既定は dry_run（0）。既定値を変えない。

@@ -20,7 +20,7 @@ drip-live/
 │   ├── oco_manager.py / oco_repo.py / oco_env.py  # TP/SL ブラケットの配置・照合・価格計算
 │   ├── halt_io.py                # キルスイッチフラグの読み込み・判定
 │   └── force_close.py            # 全ポジション強制決済（eod_close / halt_check 共用）
-├── strategies/trend/strategy.py  # bt-dynamic パッケージへの接続層。判定は classify/resolve_entry に委譲
+├── strategies/trend/strategy.py  # バックテストエンジンのパッケージへの接続層。判定は classify/resolve_entry に委譲
 ├── examples/                   # ダミー config と合成バー生成（デモ・検証用）
 ├── tests/                      # pytest（一時ディレクトリ + 合成データのみ）
 └── drip-live-service.nix    # systemd サービス / timer 定義（ユーザ・パスはオプション注入）
@@ -31,7 +31,7 @@ drip-live/
 ```
 fetch_bars ──▶ MARKET_DATA/bars/*.jsonl（5分足・日別ファイル）
                      │ bar_loader
-build_signal ── strategy.decide（bt_dynamic.classify / resolve_entry, config 注入）
+build_signal ── strategy.decide（classify / resolve_entry, config 注入）
                      │ signal.jsonl（追記）
 sender_gate ── time_utc 照合（冪等）→ ENABLE_EXEC_REQUESTS ゲート → broker_client
                      │ sent.jsonl（追記）→ 成功時 oco_manager.ensure()

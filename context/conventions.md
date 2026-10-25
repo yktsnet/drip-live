@@ -7,6 +7,6 @@
 - パス解決は `lib/paths.py` に一元化。`DRIP_LIVE_DATA`（state/logs/env）と `MARKET_DATA`(bars/tokens) の2ルート以外を参照しない。ハードコードパス禁止。
 - 設定・資格情報は env ファイル（`.env.trade.base` → `.env.drip_live` の順、プロセス環境変数が優先）と `$BT_DYNAMIC_CONFIG` の config JSON から注入する。コード内デフォルトに接続先・戦略値を置かない。
 - ブローカー API は `lib/broker_client.py`（発注・ポジション）と `lib/chart_client.py`（チャート）のみが呼ぶ。urllib 標準ライブラリのみ。ペイロードのフィールド名はブローカーの REST スキーマに従う（変えない）。
-- ドメイン非依存の抽象名を使う: `ax1` = トレンド強度、`ax2` = ボラティリティ、`direction` = 方向オシレーター（bt-dynamic の規約を踏襲）。具体指標名（ADX/ATR/RSI）を実行層に書かない。
+- ドメイン非依存の抽象名を使う: `ax1` = トレンド強度、`ax2` = ボラティリティ、`direction` = 方向オシレーター（バックテストエンジンの規約を踏襲）。具体指標名（ADX/ATR/RSI）を実行層に書かない。
 - 例外方針: 発注経路では例外を握りつぶさず記録して失敗として返す。読み取り経路（jsonl パース・フラグ読み込み）は壊れた行をスキップして継続する。
 - テストは `tests/test_{module}.py`。一時ディレクトリ + monkeypatch の env 差し替えで書き、ネットワーク・資格情報に依存させない。浮動小数比較は `pytest.approx`。
