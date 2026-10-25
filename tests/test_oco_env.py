@@ -27,22 +27,22 @@ def test_compute_targets_short():
 
 
 def test_env_precedence_env_var_wins(monkeypatch, tmp_path):
-    monkeypatch.setenv("LIVE_DYNAMIC_DATA", str(tmp_path))
+    monkeypatch.setenv("DRIP_LIVE_DATA", str(tmp_path))
     env_dir = tmp_path / "env"
     env_dir.mkdir(parents=True)
-    (env_dir / ".env.live_dynamic").write_text("RR_PIPS_TP=15\n", encoding="utf-8")
+    (env_dir / ".env.drip_live").write_text("RR_PIPS_TP=15\n", encoding="utf-8")
     oco_env._PARAMS_CACHE = None
     monkeypatch.setenv("RR_PIPS_TP", "25")
     assert oco_env.env_int("RR_PIPS_TP", 30) == 25
 
 
 def test_env_falls_back_to_file_then_default(monkeypatch, tmp_path):
-    monkeypatch.setenv("LIVE_DYNAMIC_DATA", str(tmp_path))
+    monkeypatch.setenv("DRIP_LIVE_DATA", str(tmp_path))
     monkeypatch.delenv("RR_PIPS_TP", raising=False)
     monkeypatch.delenv("RR_PIPS_SL", raising=False)
     env_dir = tmp_path / "env"
     env_dir.mkdir(parents=True)
-    (env_dir / ".env.live_dynamic").write_text("RR_PIPS_TP=15\n", encoding="utf-8")
+    (env_dir / ".env.drip_live").write_text("RR_PIPS_TP=15\n", encoding="utf-8")
     oco_env._PARAMS_CACHE = None
     assert oco_env.env_int("RR_PIPS_TP", 30) == 15
     assert oco_env.env_int("RR_PIPS_SL", 30) == 30

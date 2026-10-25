@@ -1,8 +1,8 @@
 [🇯🇵 日本語](README.md) | [🇬🇧 English](README.en.md)
 
-# live-dynamic
+# drip-live
 
-[![CI](https://github.com/yktsnet/live-dynamic/actions/workflows/ci.yml/badge.svg)](https://github.com/yktsnet/live-dynamic/actions/workflows/ci.yml)
+[![CI](https://github.com/yktsnet/drip-live/actions/workflows/ci.yml/badge.svg)](https://github.com/yktsnet/drip-live/actions/workflows/ci.yml)
 
 A live execution layer that connects a strategy validated with [bt-dynamic](https://github.com/yktsnet/bt-dynamic) (dynamic-regime backtesting) to a broker's OpenAPI **with the same decision code and the same config**. Decisions never touch the broker; all the execution layer adds is lot sizing and safety devices — an idempotent order gate, reconciling OCO, EOD close, and a kill switch. The formula you validated and the formula you run stay identical, unattended on systemd timers.
 
@@ -19,7 +19,7 @@ You can run the whole pipeline from synthetic data — no credentials, no networ
 ```bash
 pip install -r requirements.txt   # on Nix: nix-shell
 
-export LIVE_DYNAMIC_DATA=~/live_dynamic_data
+export DRIP_LIVE_DATA=~/drip_live_data
 export MARKET_DATA=~/market_data
 export BT_DYNAMIC_CONFIG=examples/config.json
 export PYTHONPATH=.
@@ -27,8 +27,8 @@ export PYTHONPATH=.
 python examples/generate_bars.py   # generate synthetic 5-minute bars
 python core/orchestrator.py        # decision -> order gate (dry_run by default)
 
-cat $LIVE_DYNAMIC_DATA/state/signal.jsonl   # strategy decisions
-cat $LIVE_DYNAMIC_DATA/state/sent.jsonl     # send records with dry_run=true
+cat $DRIP_LIVE_DATA/state/signal.jsonl   # strategy decisions
+cat $DRIP_LIVE_DATA/state/sent.jsonl     # send records with dry_run=true
 ```
 
 ## Architecture
@@ -90,7 +90,7 @@ flowchart TD
 | Data processing | Python + pandas | Same foundation as bt-dynamic's indicators; the execution layer adds no numerical code of its own |
 | Broker API | Standard library only (urllib) | Minimal dependencies on the order path; third-party HTTP libraries are a failure point and a supply-chain risk |
 | Scheduling | systemd timers (oneshot) | No resident process: there is no "the process is dead" state, and all state lives in files |
-| Service definition | Nix (`live-dynamic-service.nix`) | Timers, environment, and the Python environment are pinned declaratively and reproducibly |
+| Service definition | Nix (`drip-live-service.nix`) | Timers, environment, and the Python environment are pinned declaratively and reproducibly |
 | State | JSONL (append-only) | Auditable with grep/tail; having no database keeps recovery and debugging simple |
 
 ## Design Decisions
@@ -120,7 +120,7 @@ Highlights only; the full log is in [docs/design-decisions.en.md](docs/design-de
 
 ## Configuration
 
-Put connection settings in `$LIVE_DYNAMIC_DATA/env/.env.trade.base` (**all values below are dummies**):
+Put connection settings in `$DRIP_LIVE_DATA/env/.env.trade.base` (**all values below are dummies**):
 
 ```
 ACCOUNT_KEY=xxxx
@@ -141,7 +141,7 @@ BT_DYNAMIC_CONFIG=/path/to/your/config.json
 
 There are no default URLs in the code: if the env files don't provide them, nothing runs.
 
-Order sending is controlled by `$LIVE_DYNAMIC_DATA/env/.env.live_dynamic`:
+Order sending is controlled by `$DRIP_LIVE_DATA/env/.env.drip_live`:
 
 ```
 ENABLE_EXEC_REQUESTS=0   # dry_run (default). Set to 1 for live orders
@@ -152,7 +152,7 @@ Strategy parameters (cell mapping, thresholds, TP/SL, decision interval, session
 
 ### Kill Switch
 
-Append to `$LIVE_DYNAMIC_DATA/state/halt_flags.jsonl`:
+Append to `$DRIP_LIVE_DATA/state/halt_flags.jsonl`:
 
 ```
 {"ts": "2026-01-05T09:00:00Z"}                                    # halt that whole UTC day
@@ -163,11 +163,11 @@ Append to `$LIVE_DYNAMIC_DATA/state/halt_flags.jsonl`:
 ### systemd (NixOS / home-manager)
 
 ```nix
-services.live-dynamic = {
+services.drip-live = {
   enable = true;
   user = "youruser";
-  appRoot = "/home/youruser/live-dynamic";
-  dataRoot = "/home/youruser/live_dynamic_data";
+  appRoot = "/home/youruser/drip-live";
+  dataRoot = "/home/youruser/drip_live_data";
   marketDataRoot = "/home/youruser/market_data";
   orchestrator = true;   # Mon-Fri, every 30 min during the session
   haltCheck = true;      # Mon-Fri, every 5 min

@@ -4,7 +4,7 @@ from core import sender_gate
 
 
 def _setup_dirs(tmp_path, monkeypatch):
-    monkeypatch.setenv("LIVE_DYNAMIC_DATA", str(tmp_path))
+    monkeypatch.setenv("DRIP_LIVE_DATA", str(tmp_path))
     (tmp_path / "state").mkdir(parents=True, exist_ok=True)
     (tmp_path / "env").mkdir(parents=True, exist_ok=True)
 

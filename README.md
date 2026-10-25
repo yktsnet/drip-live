@@ -1,8 +1,8 @@
 [🇯🇵 日本語](README.md) | [🇬🇧 English](README.en.md)
 
-# live-dynamic
+# drip-live
 
-[![CI](https://github.com/yktsnet/live-dynamic/actions/workflows/ci.yml/badge.svg)](https://github.com/yktsnet/live-dynamic/actions/workflows/ci.yml)
+[![CI](https://github.com/yktsnet/drip-live/actions/workflows/ci.yml/badge.svg)](https://github.com/yktsnet/drip-live/actions/workflows/ci.yml)
 
 [bt-dynamic](https://github.com/yktsnet/bt-dynamic)（動的レジーム切替バックテスト）で検証した戦略を、**同一の判定コード・同一の config のまま**実弾に接続する実行層。判定はブローカーに触れず、実行層が足すのはロット計算と安全装置——冪等な発注ゲート・照合型 OCO・EOD 決済・キルスイッチ——だけである。検証した式と運用する式を一致させたまま、systemd timer で無人運転する。
 
@@ -19,7 +19,7 @@
 ```bash
 pip install -r requirements.txt   # Nix 環境なら: nix-shell
 
-export LIVE_DYNAMIC_DATA=~/live_dynamic_data
+export DRIP_LIVE_DATA=~/drip_live_data
 export MARKET_DATA=~/market_data
 export BT_DYNAMIC_CONFIG=examples/config.json
 export PYTHONPATH=.
@@ -27,8 +27,8 @@ export PYTHONPATH=.
 python examples/generate_bars.py   # 合成5分足を生成
 python core/orchestrator.py        # 判定 → 発注ゲート（既定 dry_run）
 
-cat $LIVE_DYNAMIC_DATA/state/signal.jsonl   # 戦略判定の出力
-cat $LIVE_DYNAMIC_DATA/state/sent.jsonl     # dry_run=true の送信記録
+cat $DRIP_LIVE_DATA/state/signal.jsonl   # 戦略判定の出力
+cat $DRIP_LIVE_DATA/state/sent.jsonl     # dry_run=true の送信記録
 ```
 
 ## Architecture
@@ -90,7 +90,7 @@ flowchart TD
 | データ処理 | Python + pandas | bt-dynamic の指標計算と同じ基盤。実行層に独自の数値処理を持ち込まない |
 | ブローカー API | 標準ライブラリのみ（urllib） | 発注経路の依存を最小化する。requests 等の外部依存は障害点と供給網リスクになる |
 | スケジューリング | systemd timer（oneshot） | 常駐プロセスを持たない。プロセスが死んでいる状態がない・状態はすべてファイルにある |
-| サービス定義 | Nix (`live-dynamic-service.nix`) | timer・環境変数・依存 Python 環境を宣言的に固定し、ホストへ再現可能に配備する |
+| サービス定義 | Nix (`drip-live-service.nix`) | timer・環境変数・依存 Python 環境を宣言的に固定し、ホストへ再現可能に配備する |
 | 状態管理 | JSONL（追記専用） | grep / tail で監査できる。DB を持たないことで復旧とデバッグが単純になる |
 
 ## Design Decisions
@@ -120,7 +120,7 @@ flowchart TD
 
 ## Configuration
 
-`$LIVE_DYNAMIC_DATA/env/.env.trade.base` に接続情報を書く（**以下はすべてダミー値**）:
+`$DRIP_LIVE_DATA/env/.env.trade.base` に接続情報を書く（**以下はすべてダミー値**）:
 
 ```
 ACCOUNT_KEY=xxxx
@@ -141,7 +141,7 @@ BT_DYNAMIC_CONFIG=/path/to/your/config.json
 
 接続先 URL はコードにデフォルトを持たない。env に書かなければ動かない設計である。
 
-`$LIVE_DYNAMIC_DATA/env/.env.live_dynamic` で発注を制御する:
+`$DRIP_LIVE_DATA/env/.env.drip_live` で発注を制御する:
 
 ```
 ENABLE_EXEC_REQUESTS=0   # dry_run（既定）。1 で実発注
@@ -152,7 +152,7 @@ LOT_BASE=0.1
 
 ### Kill Switch
 
-`$LIVE_DYNAMIC_DATA/state/halt_flags.jsonl` に追記する:
+`$DRIP_LIVE_DATA/state/halt_flags.jsonl` に追記する:
 
 ```
 {"ts": "2026-01-05T09:00:00Z"}                                    # その UTC 日を停止
@@ -163,11 +163,11 @@ LOT_BASE=0.1
 ### systemd (NixOS / home-manager)
 
 ```nix
-services.live-dynamic = {
+services.drip-live = {
   enable = true;
   user = "youruser";
-  appRoot = "/home/youruser/live-dynamic";
-  dataRoot = "/home/youruser/live_dynamic_data";
+  appRoot = "/home/youruser/drip-live";
+  dataRoot = "/home/youruser/drip_live_data";
   marketDataRoot = "/home/youruser/market_data";
   orchestrator = true;   # 月-金 30分ごと（セッション内）
   haltCheck = true;      # 月-金 5分ごと

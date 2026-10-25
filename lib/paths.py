@@ -1,6 +1,6 @@
 """Path resolution. All state lives under two roots:
 
-- ``LIVE_DYNAMIC_DATA``: this app's state / logs / env files
+- ``DRIP_LIVE_DATA``: this app's state / logs / env files
 - ``MARKET_DATA``: bar data and tokens, shared with the fetch side
 """
 from __future__ import annotations
@@ -17,7 +17,7 @@ def _env_path(key: str, default_home_rel: str) -> Path:
 
 
 def get_data_root() -> Path:
-    return _env_path("LIVE_DYNAMIC_DATA", "live_dynamic_data")
+    return _env_path("DRIP_LIVE_DATA", "drip_live_data")
 
 
 def get_state_dir() -> Path:

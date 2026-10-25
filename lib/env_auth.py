@@ -1,7 +1,7 @@
 """Credential and trade-parameter loading.
 
-Secrets live outside the repo in ``LIVE_DYNAMIC_DATA/env/``. Load order:
-``.env.trade.base`` then ``.env.live_dynamic``; already-set process env
+Secrets live outside the repo in ``DRIP_LIVE_DATA/env/``. Load order:
+``.env.trade.base`` then ``.env.drip_live``; already-set process env
 vars win over file values.
 """
 from __future__ import annotations
@@ -51,7 +51,7 @@ def load_trade_env() -> dict:
 
     cfg: dict = {}
     _load_env_file(env_dir / ".env.trade.base", cfg)
-    _load_env_file(env_dir / ".env.live_dynamic", cfg)
+    _load_env_file(env_dir / ".env.drip_live", cfg)
 
     for k, v in cfg.items():
         if os.environ.get(k) is None:
